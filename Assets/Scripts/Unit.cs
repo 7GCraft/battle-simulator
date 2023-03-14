@@ -2,14 +2,20 @@ using UnityEngine;
 
 public class Unit : MonoBehaviour
 {
-    private void Start()
+    [SerializeField] private GameObject selectedIndicator;
+
+    private void Awake()
     {
-        UnitSelection.Instance.units.Add(gameObject);
+        Deselect();
     }
 
-    // Update is called once per frame
-    private void OnDestroy()
+    public void Select()
     {
-        UnitSelection.Instance.units.Remove(gameObject);
+        selectedIndicator.SetActive(true);
+    }
+
+    public void Deselect()
+    {
+        selectedIndicator.SetActive(false);
     }
 }
