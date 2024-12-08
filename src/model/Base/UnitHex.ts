@@ -2,6 +2,6 @@
 import { defineHex } from "honeycomb-grid";
 import gameConfig from "../../../gameConfig";
 
-const PlayerHex = defineHex({ ...gameConfig.hex, dimensions: 30 });
+const UnitHex = defineHex({ ...gameConfig.hex, dimensions: 30 });
 
-export default PlayerHex;
+export default UnitHex;

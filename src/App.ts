@@ -7,7 +7,7 @@ import {
 import MapTile from "./model/MapTile";
 import { Grid } from "honeycomb-grid";
 import * as PIXI from "pixi.js";
-import Player from "./model/Player";
+import Unit from "./model/Unit";
 import { GameState } from "./types/GameState";
 import { getObjectFromStateAndCoord } from "./util/board";
 
@@ -15,17 +15,17 @@ class BattleSimulatorClient {
    client: _ClientImpl<GameState>;
    pixiApp: PIXI.Application;
    grid: Grid<MapTile>;
-   players: Player[];
+   units: Unit[];
 
    constructor(pixiApp: PIXI.Application) {
       this.client = Client({ game: BattleSimulator });
       this.client.start();
       this.pixiApp = pixiApp;
       this.grid = this.createBoard();
-      this.players = this.createPlayers();
+      this.units = this.createUnits();
 
-      this.attachListeners();
-      this.client.subscribe((state) => this.update(state));
+      // this.attachListeners();
+      // this.client.subscribe((state) => this.update(state));
    }
 
    createBoard() {
@@ -41,93 +41,83 @@ class BattleSimulatorClient {
       return grid;
    }
 
-   createPlayers() {
+   createUnits() {
       const initialState = this.client.getInitialState();
-      const players = initialState.G.players;
+      const units = initialState.G.units;
 
-      return players.map((player, i) => {
-         // const player = new Player(playerPos, "blue");
-         const playerTile = Player.create(
+      return units.map((unit) => {
+         const unitTile = Unit.create(
             0,
-            this.grid.getHex(player.position)!,
-            i == 0 ? "blue" : "red"
+            this.grid.getHex(unit.position)!,
+            unit.playerID == "0" ? "blue" : "red"
          );
-         pixiApp.stage.addChild(playerTile.render());
-         return playerTile;
+         pixiApp.stage.addChild(unitTile.render());
+         return unitTile;
       });
    }
 
-   attachListeners() {
-      document.addEventListener("click", ({ offsetX, offsetY }) => {
-         const tile = this.grid.pointToHex(
-            { x: offsetX, y: offsetY },
-            { allowOutside: false }
-         );
-         const state = this.client.getState();
+   // attachListeners() {
+   //    document.addEventListener("click", ({ offsetX, offsetY }) => {
+   //       const tile = this.grid.pointToHex(
+   //          { x: offsetX, y: offsetY },
+   //          { allowOutside: false }
+   //       );
+   //       const state = this.client.getState();
 
-         if (state == null || tile === undefined) return;
+   //       if (state == null || tile === undefined) return;
 
-         const coordinate = { q: tile.q, r: tile.r };
-         const object = getObjectFromStateAndCoord(state.G, coordinate);
+   //       const coordinate = { q: tile.q, r: tile.r };
+   //       const object = getObjectFromStateAndCoord(state.G, coordinate);
 
-         if (object == null) {
-            this.client.moves.movePlayer(coordinate);
-            return;
-         }
+   //       if (object == null) {
+   //          this.client.moves.movePlayer(coordinate);
+   //          return;
+   //       }
 
-         if (object.id != state.ctx.currentPlayer) {
-            this.client.moves.fight(object.id);
-         }
-      });
-   }
+   //       if (object.id != state.ctx.currentPlayer) {
+   //          this.client.moves.fight(object.id);
+   //       }
+   //    });
+   // }
 
-   update(state: ClientState<GameState>) {
-      if (state === null) return;
-      const newPlayers = [];
+   // update(state: ClientState<GameState>) {
+   //    if (state === null) return;
+   //    const newPlayers = [];
 
-      for (let i = 0; i < this.players.length; i++) {
-         const player = this.players[i];
-         player.destroy();
+   //    for (let i = 0; i < this.players.length; i++) {
+   //       const player = this.players[i];
+   //       player.destroy();
 
-         const playerState = state.G.players[i];
-         if (!playerState.isAlive) {
-            continue;
-         }
+   //       const playerState = state.G.players[i];
+   //       if (!playerState.isAlive) {
+   //          continue;
+   //       }
 
-         const newPlayerPosition = playerState.position;
-         const tile = this.grid.getHex(newPlayerPosition)!;
-         const newPlayer = Player.create(
-            playerState.power,
-            tile,
-            i == 0 ? "blue" : "red"
-         );
-         pixiApp.stage.addChild(newPlayer.render());
+   //       const newPlayerPosition = playerState.position;
+   //       const tile = this.grid.getHex(newPlayerPosition)!;
+   //       const newPlayer = Player.create(
+   //          playerState.power,
+   //          tile,
+   //          i == 0 ? "blue" : "red"
+   //       );
+   //       pixiApp.stage.addChild(newPlayer.render());
 
-         tile.cellNumber = 0;
-         tile.render();
+   //       tile.cellNumber = 0;
+   //       tile.render();
 
-         newPlayers.push(newPlayer);
-      }
+   //       newPlayers.push(newPlayer);
+   //    }
 
-      this.players = newPlayers;
+   //    this.players = newPlayers;
 
-      if (state.ctx.gameover) {
-         const textGameOverElement = document.querySelector("#game-over-text")!;
-         textGameOverElement.textContent =
-            state.ctx.gameover.winner !== undefined
-               ? `Player ${state.ctx.gameover.winner} Win!`
-               : "It's a Draw!";
-      }
-
-      // console.log("Before: ", { q: this.player.q, r: this.player.r });
-      // console.log("After: ", newPlayerPosition);
-      // const cubePosition = toCube(TileHex.settings, newPlayerPosition);
-      // const tilePosition = this.grid.getHex(newPlayerPosition);
-      // this.player = this.player.translate({
-      //    q: cubePosition.q - this.player.q,
-      //    r: cubePosition.r - this.player.r,
-      // });
-   }
+   //    if (state.ctx.gameover) {
+   //       const textGameOverElement = document.querySelector("#game-over-text")!;
+   //       textGameOverElement.textContent =
+   //          state.ctx.gameover.winner !== undefined
+   //             ? `Player ${state.ctx.gameover.winner} Win!`
+   //             : "It's a Draw!";
+   //    }
+   // }
 }
 
 const pixiApp = new PIXI.Application();
