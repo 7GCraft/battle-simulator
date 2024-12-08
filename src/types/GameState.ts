@@ -1,7 +1,8 @@
 import { BaseMapTile } from "./model/BaseMapTile";
-import { BasePlayer } from "./model/BasePlayer";
+import { BaseUnit } from "./model/BaseUnit";
 
 export declare type GameState = {
    cells: BaseMapTile[];
-   players: BasePlayer[];
+   units: BaseUnit[];
+   unitCountByPlayer: Record<string, number>;
 };

@@ -1,11 +1,11 @@
-import PlayerHex from "./Base/PlayerHex";
+import UnitHex from "./Base/UnitHex";
 import MapTile from "./MapTile";
 import * as PIXI from "pixi.js";
 import { player as playerColor } from "../../colors.json";
 import { PlayerTeamColor } from "../types/config/colors";
 
 // class Player {
-class Player extends PlayerHex {
+class Unit extends UnitHex {
    power!: number;
    positionTile!: MapTile;
    colorKey!: PlayerTeamColor;
@@ -23,7 +23,7 @@ class Player extends PlayerHex {
       initialTile: MapTile,
       colorKey: PlayerTeamColor
    ) {
-      const hex = new Player({ q: initialTile.q, r: initialTile.r });
+      const hex = new Unit({ q: initialTile.q, r: initialTile.r });
       hex.power = power;
       hex.positionTile = initialTile;
       hex.colorKey = colorKey;
@@ -67,4 +67,4 @@ class Player extends PlayerHex {
    }
 }
 
-export default Player;
+export default Unit;
