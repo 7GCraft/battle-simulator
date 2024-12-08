@@ -1,21 +1,21 @@
 import { Client } from "boardgame.io/client";
 import { BattleSimulator } from "./Game";
-import {
-   ClientState,
-   _ClientImpl,
-} from "boardgame.io/dist/types/src/client/client";
+import { _ClientImpl } from "boardgame.io/dist/types/src/client/client";
 import MapTile from "./model/MapTile";
 import { Grid } from "honeycomb-grid";
 import * as PIXI from "pixi.js";
 import Unit from "./model/Unit";
 import { GameState } from "./types/GameState";
 import { getObjectFromStateAndCoord } from "./util/board";
+import DebugPanel from "./client/DebugPanel";
+import { ClientState } from "./types/ClientState";
 
 class BattleSimulatorClient {
    client: _ClientImpl<GameState>;
    pixiApp: PIXI.Application;
    grid: Grid<MapTile>;
    units: Unit[];
+   clientState: ClientState;
 
    constructor(pixiApp: PIXI.Application) {
       this.client = Client({ game: BattleSimulator });
@@ -23,6 +23,17 @@ class BattleSimulatorClient {
       this.pixiApp = pixiApp;
       this.grid = this.createBoard();
       this.units = this.createUnits();
+      const clientState = {
+         selectedUnit: null,
+         markedUnitIds: new Set<string>(),
+      };
+
+      // FOR DEV & DEBUG
+      const debugPanel = new DebugPanel("#debug-panel");
+      this.clientState = debugPanel.watch(clientState);
+
+      // FOR PRODUCTION
+      // this.clientState = clientState;
 
       // this.attachListeners();
       // this.client.subscribe((state) => this.update(state));
