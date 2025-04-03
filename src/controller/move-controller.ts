@@ -3,15 +3,19 @@ import { INVALID_MOVE } from "boardgame.io/core";
 import { Move } from "boardgame.io";
 import { GameState } from "../types/GameState";
 import TileHex from "../model/Base/TileHex";
+import { getUnitFromId } from "../util/game-state";
 
-const movePlayer: Move<GameState> = (
+const moveUnit: Move<GameState> = (
    { G, playerID },
+   unitID: string,
    target: PartialCubeCoordinates
 ) => {
-   const player = G.players[+playerID];
-   const dist = distance(TileHex.settings, player.position, target);
+   const unit = getUnitFromId(G.units, unitID);
+   if (unit == null) return INVALID_MOVE;
+
+   const dist = distance(TileHex.settings, unit.position, target);
    if (dist > 1 || dist == 0) return INVALID_MOVE;
-   player.position = target;
+   unit.position = target;
 
    const currCoordinates = toCube(TileHex.settings, target);
    const targetCell = G.cells.filter((cell) => {
@@ -22,7 +26,7 @@ const movePlayer: Move<GameState> = (
    })[0];
 
    if (targetCell.cellNumber > 0) {
-      player.power += targetCell.cellNumber;
+      unit.power += targetCell.cellNumber;
       targetCell.cellNumber = 0;
    }
 };
@@ -30,7 +34,7 @@ const movePlayer: Move<GameState> = (
 class MoveController {
    static publish() {
       return {
-         movePlayer,
+         moveUnit,
       };
    }
 }

@@ -6,7 +6,7 @@ import { Grid } from "honeycomb-grid";
 import * as PIXI from "pixi.js";
 import Unit from "./model/Unit";
 import { GameState } from "./types/GameState";
-import { getObjectFromStateAndCoord } from "./util/board";
+import ClickHandler from "./client/ClickHandler";
 import DebugPanel from "./client/DebugPanel";
 import { ClientState } from "./types/ClientState";
 
@@ -35,7 +35,7 @@ class BattleSimulatorClient {
       // FOR PRODUCTION
       // this.clientState = clientState;
 
-      // this.attachListeners();
+      this.attachListeners();
       // this.client.subscribe((state) => this.update(state));
    }
 
@@ -67,13 +67,16 @@ class BattleSimulatorClient {
       });
    }
 
-   // attachListeners() {
-   //    document.addEventListener("click", ({ offsetX, offsetY }) => {
-   //       const tile = this.grid.pointToHex(
-   //          { x: offsetX, y: offsetY },
-   //          { allowOutside: false }
-   //       );
-   //       const state = this.client.getState();
+   attachListeners() {
+      const clickHandler = new ClickHandler(
+         this.client,
+         this.grid,
+         this.clientState
+      );
+      document.addEventListener("click", ({ offsetX, offsetY }) =>
+         clickHandler.handle(offsetX, offsetY)
+      );
+   }
 
    //       if (state == null || tile === undefined) return;
 
