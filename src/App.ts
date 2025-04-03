@@ -1,6 +1,9 @@
 import { Client } from "boardgame.io/client";
 import { BattleSimulator } from "./Game";
-import { _ClientImpl } from "boardgame.io/dist/types/src/client/client";
+import {
+   ClientState as ServerState,
+   _ClientImpl,
+} from "boardgame.io/dist/types/src/client/client";
 import MapTile from "./model/MapTile";
 import { Grid } from "honeycomb-grid";
 import * as PIXI from "pixi.js";
@@ -9,6 +12,7 @@ import { GameState } from "./types/GameState";
 import ClickHandler from "./client/ClickHandler";
 import DebugPanel from "./client/DebugPanel";
 import { ClientState } from "./types/ClientState";
+import UnitBuilder from "./model/builder/unit-builder";
 
 class BattleSimulatorClient {
    client: _ClientImpl<GameState>;
@@ -36,7 +40,7 @@ class BattleSimulatorClient {
       // this.clientState = clientState;
 
       this.attachListeners();
-      // this.client.subscribe((state) => this.update(state));
+      this.client.subscribe((state) => this.update(state));
    }
 
    createBoard() {
@@ -58,11 +62,12 @@ class BattleSimulatorClient {
 
       return units.map((unit) => {
          const unitTile = Unit.create(
+            unit.id,
             0,
             this.grid.getHex(unit.position)!,
             unit.playerID == "0" ? "blue" : "red"
          );
-         pixiApp.stage.addChild(unitTile.render());
+         pixiApp.stage.addChild(UnitBuilder.renderPrimary(unitTile));
          return unitTile;
       });
    }
@@ -78,66 +83,56 @@ class BattleSimulatorClient {
       );
    }
 
-   //       if (state == null || tile === undefined) return;
+   update(state: ServerState<GameState>) {
+      if (state === null) return;
+      const newUnits = [];
 
-   //       const coordinate = { q: tile.q, r: tile.r };
-   //       const object = getObjectFromStateAndCoord(state.G, coordinate);
+      for (let i = 0; i < this.units.length; i++) {
+         const unit = this.units[i];
+         unit.destroy();
 
-   //       if (object == null) {
-   //          this.client.moves.movePlayer(coordinate);
-   //          return;
-   //       }
+         const unitState = state.G.units[i];
+         if (!unitState.isAlive) {
+            continue;
+         }
 
-   //       if (object.id != state.ctx.currentPlayer) {
-   //          this.client.moves.fight(object.id);
-   //       }
-   //    });
-   // }
+         const newUnitPosition = unitState.position;
+         const tile = this.grid.getHex(newUnitPosition)!;
+         const newUnit = Unit.create(
+            unitState.id,
+            unitState.power,
+            tile,
+            unitState.playerID == "0" ? "blue" : "red"
+         );
 
-   // update(state: ClientState<GameState>) {
-   //    if (state === null) return;
-   //    const newPlayers = [];
+         if (this.clientState.markedUnitIds.has(unitState.id)) {
+            pixiApp.stage.addChild(UnitBuilder.renderPrimary(newUnit));
+         } else {
+            pixiApp.stage.addChild(UnitBuilder.renderDisabled(newUnit));
+         }
 
-   //    for (let i = 0; i < this.players.length; i++) {
-   //       const player = this.players[i];
-   //       player.destroy();
+         tile.cellNumber = 0;
+         tile.render();
 
-   //       const playerState = state.G.players[i];
-   //       if (!playerState.isAlive) {
-   //          continue;
-   //       }
+         newUnits.push(newUnit);
+      }
 
-   //       const newPlayerPosition = playerState.position;
-   //       const tile = this.grid.getHex(newPlayerPosition)!;
-   //       const newPlayer = Player.create(
-   //          playerState.power,
-   //          tile,
-   //          i == 0 ? "blue" : "red"
-   //       );
-   //       pixiApp.stage.addChild(newPlayer.render());
+      this.units = newUnits;
 
-   //       tile.cellNumber = 0;
-   //       tile.render();
-
-   //       newPlayers.push(newPlayer);
-   //    }
-
-   //    this.players = newPlayers;
-
-   //    if (state.ctx.gameover) {
-   //       const textGameOverElement = document.querySelector("#game-over-text")!;
-   //       textGameOverElement.textContent =
-   //          state.ctx.gameover.winner !== undefined
-   //             ? `Player ${state.ctx.gameover.winner} Win!`
-   //             : "It's a Draw!";
-   //    }
-   // }
+      // if (state.ctx.gameover) {
+      //    const textGameOverElement = document.querySelector("#game-over-text")!;
+      //    textGameOverElement.textContent =
+      //       state.ctx.gameover.winner !== undefined
+      //          ? `Player ${state.ctx.gameover.winner} Win!`
+      //          : "It's a Draw!";
+      // }
+   }
 }
 
 const pixiApp = new PIXI.Application();
 await pixiApp.init({ backgroundAlpha: 0 });
 
-document.body.appendChild(pixiApp.canvas);
+document.querySelector("#game")!.appendChild(pixiApp.canvas);
 
 // Debug Only
 globalThis.__PIXI_APP__ = pixiApp;

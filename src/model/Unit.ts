@@ -1,29 +1,26 @@
 import UnitHex from "./Base/UnitHex";
 import MapTile from "./MapTile";
 import * as PIXI from "pixi.js";
-import { player as playerColor } from "../../colors.json";
+import { unit as unitColor } from "../../colors.json";
 import { PlayerTeamColor } from "../types/config/colors";
 
 // class Player {
 class Unit extends UnitHex {
+   unitID!: string;
    power!: number;
    positionTile!: MapTile;
    colorKey!: PlayerTeamColor;
    graphic!: PIXI.Graphics;
 
-   // constructor(initialTile: MapTile, colorKey: string) {
-   //    this.power = 0;
-   //    this.positionTile = initialTile;
-   //    this.colorKey = colorKey;
-   // }
-
    // Temporary Create function for Hex Player
    static create(
+      unitID: string,
       power: number,
       initialTile: MapTile,
       colorKey: PlayerTeamColor
    ) {
       const hex = new Unit({ q: initialTile.q, r: initialTile.r });
+      hex.unitID = unitID;
       hex.power = power;
       hex.positionTile = initialTile;
       hex.colorKey = colorKey;
@@ -31,11 +28,7 @@ class Unit extends UnitHex {
       return hex;
    }
 
-   render() {
-      this.graphic.clear();
-
-      const color = playerColor[this.colorKey].active;
-
+   drawPoly() {
       // Turns original hex corner into shrinked corner
       //    => Linear Transformation - Scaling
       // https://gamemath.com/book/matrixtransforms.html
@@ -45,24 +38,32 @@ class Unit extends UnitHex {
          y: (p.y - this.y) * scale + this.y,
       }));
 
-      this.graphic
-         .poly(newCorners)
-         .fill({ color })
-         .stroke({ width: 1, color: "#999999" });
+      this.graphic.poly(newCorners).stroke({ width: 1, color: "#999999" });
 
-      this.graphic.removeChildren();
+      return this;
+   }
 
+   fillColorStyle(style: "primary" | "active" | "disabled") {
+      const color = unitColor[this.colorKey][style];
+      this.graphic.fill({ color });
+      return this;
+   }
+
+   addText() {
       const text = new PIXI.Text({ text: this.power });
       text.x = this.x - text.width / 2;
       text.y = this.y - text.height / 2;
       this.graphic.addChild(text);
+   }
 
-      return this.graphic;
+   reset() {
+      this.graphic.removeChildren();
+      this.graphic.clear();
+      return this;
    }
 
    destroy() {
-      this.graphic.removeChildren();
-      this.graphic.clear();
+      this.reset();
       this.graphic.destroy();
    }
 }

@@ -3,14 +3,16 @@
       "background": "#000",
       "primary": "#0d6efd"
    },
-   "player": {
+   "unit": {
       "red": {
          "primary": "#c40000",
-         "active": "#ff6868"
+         "active": "#ff6868",
+         "disabled": "#ff686880"
       },
       "blue": {
-         "primary": "#004aff",
-         "active": "#71afff"
+         "primary": "#4e90e6",
+         "active": "#71afff",
+         "disabled": "#71afff80"
       }
    }
 }
