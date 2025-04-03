@@ -29,8 +29,28 @@ export default class DebugPanel {
    }
 
    getStringContentFrom(val: any): string {
-      if (typeof val === "string") return val;
+      if (typeof val === "string") return `"${val}"`;
       if (typeof val === "number") return val.toString();
+      if (typeof val === "boolean") return val ? "true" : "false";
+      if (val instanceof Set) {
+         const items = [...val.values()]
+            .map((item) => this.getStringContentFrom(item))
+            .join();
+         return `Set(${val.size}) [${items}]`;
+      }
+
+      if (val instanceof Map) {
+         const items = [...val.entries()]
+            .map(
+               (item) =>
+                  `${this.getStringContentFrom(
+                     item[0]
+                  )}: ${this.getStringContentFrom(item[1])}`
+            )
+            .join();
+         return `Map(${val.size}) {${items}}`;
+      }
+
       return JSON.stringify(val);
    }
 }
