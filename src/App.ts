@@ -13,6 +13,7 @@ import ClickHandler from "./client/ClickHandler";
 import DebugPanel from "./client/DebugPanel";
 import { ClientState } from "./types/ClientState";
 import UnitBuilder from "./model/builder/unit-builder";
+import EndTurnHandler from "./client/EndTurnHandler";
 
 class BattleSimulatorClient {
    client: _ClientImpl<GameState>;
@@ -78,9 +79,22 @@ class BattleSimulatorClient {
          this.grid,
          this.clientState
       );
-      document.addEventListener("click", ({ offsetX, offsetY }) =>
+
+      this.pixiApp.canvas.addEventListener("click", ({ offsetX, offsetY }) =>
          clickHandler.handle(offsetX, offsetY)
       );
+
+      const endTurnHandler = new EndTurnHandler(this.client, this.clientState);
+
+      document
+         .querySelector("#end-turn-button")
+         ?.addEventListener("click", () => {
+            const confirm = window.confirm(
+               "Are you sure you want to end the turn?"
+            );
+
+            if (confirm) endTurnHandler.handle();
+         });
    }
 
    update(state: ServerState<GameState>) {
@@ -132,7 +146,9 @@ class BattleSimulatorClient {
 const pixiApp = new PIXI.Application();
 await pixiApp.init({ backgroundAlpha: 0 });
 
-document.querySelector("#game")!.appendChild(pixiApp.canvas);
+document
+   .querySelector("#game")!
+   .insertBefore(pixiApp.canvas, document.querySelector("#end-turn-button"));
 
 // Debug Only
 globalThis.__PIXI_APP__ = pixiApp;
