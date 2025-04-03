@@ -21,7 +21,7 @@ export const BattleSimulator: Game<GameState> = {
    maxPlayers: 2,
    turn: {
       minMoves: 1,
-      maxMoves: 1,
+      // maxMoves: 1,
    },
    moves: {
       ...MoveController.publish(),
