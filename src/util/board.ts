@@ -5,10 +5,9 @@ export const getObjectFromStateAndCoord = (
    state: GameState,
    coordinate: PartialCubeCoordinates
 ) => {
-   const filtered = state.players.filter(
-      (player) =>
-         player.position.q === coordinate.q &&
-         player.position.r === coordinate.r
+   const filtered = state.units.filter(
+      (unit) =>
+         unit.position.q === coordinate.q && unit.position.r === coordinate.r
    );
 
    return filtered.length > 0 ? filtered[0] : null;
