@@ -1,7 +1,7 @@
 import { PartialCubeCoordinates } from "honeycomb-grid";
 import { GameState } from "../types/GameState";
 
-export const getObjectFromStateAndCoord = (
+export const getUnitsFromStateAndCoord = (
    state: GameState,
    coordinate: PartialCubeCoordinates
 ) => {
@@ -10,5 +10,5 @@ export const getObjectFromStateAndCoord = (
          unit.position.q === coordinate.q && unit.position.r === coordinate.r
    );
 
-   return filtered.length > 0 ? filtered[0] : null;
+   return filtered;
 };
