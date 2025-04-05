@@ -14,12 +14,13 @@ import DebugPanel from "./client/DebugPanel";
 import { ClientState } from "./types/ClientState";
 import UnitBuilder from "./model/builder/unit-builder";
 import EndTurnHandler from "./client/EndTurnHandler";
+import { getUnitFromId } from "./util/game-state";
 
 class BattleSimulatorClient {
    client: _ClientImpl<GameState>;
    pixiApp: PIXI.Application;
    grid: Grid<MapTile>;
-   units: Unit[];
+   units: Map<string, Unit>;
    clientState: ClientState;
 
    constructor(pixiApp: PIXI.Application) {
@@ -59,9 +60,10 @@ class BattleSimulatorClient {
 
    createUnits() {
       const initialState = this.client.getInitialState();
-      const units = initialState.G.units;
+      const gameUnits = initialState.G.units;
+      const units = new Map<string, Unit>();
 
-      return units.map((unit) => {
+      gameUnits.forEach((unit) => {
          const unitTile = Unit.create(
             unit.id,
             0,
@@ -69,8 +71,10 @@ class BattleSimulatorClient {
             unit.playerID == "0" ? "blue" : "red"
          );
          pixiApp.stage.addChild(UnitBuilder.renderPrimary(unitTile));
-         return unitTile;
+         units.set(unit.id, unitTile);
       });
+
+      return units;
    }
 
    attachListeners() {
@@ -99,14 +103,15 @@ class BattleSimulatorClient {
 
    update(state: ServerState<GameState>) {
       if (state === null) return;
-      const newUnits = [];
+      const renderedUnitIDs = this.units.keys();
 
-      for (let i = 0; i < this.units.length; i++) {
-         const unit = this.units[i];
+      for (const unitID of renderedUnitIDs) {
+         const unit = this.units.get(unitID)!;
          unit.destroy();
 
-         const unitState = state.G.units[i];
-         if (!unitState.isAlive) {
+         const unitState = getUnitFromId(state.G.units, unitID);
+         if (unitState == null || !unitState.isAlive) {
+            this.units.delete(unitID);
             continue;
          }
 
@@ -128,10 +133,8 @@ class BattleSimulatorClient {
          tile.cellNumber = 0;
          tile.render();
 
-         newUnits.push(newUnit);
+         this.units.set(unitID, newUnit);
       }
-
-      this.units = newUnits;
 
       // if (state.ctx.gameover) {
       //    const textGameOverElement = document.querySelector("#game-over-text")!;
