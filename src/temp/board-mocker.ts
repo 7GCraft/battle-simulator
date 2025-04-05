@@ -31,7 +31,7 @@ export const mockUnits = (
       mockUnits.push({
          id: i.toString(),
          playerID: (i % 2).toString(),
-         power: 0,
+         power: 1,
          position: availablePositions.splice(randomTileIdx, 1)[0].coordinates,
          isAlive: true,
       });

@@ -46,18 +46,20 @@ export default class ClickHandler {
          return;
       }
 
+      let isActionSuccessful = true;
       if (target == null) {
          const res = this.gameClient.moves.moveUnit(
             this.clientState.selectedUnit.id,
             coordinate
          );
+      } else {
+         isActionSuccessful = this.handleFighting(target);
       }
-      // else if (target.id != state.ctx.currentPlayer) {
-      //    this.gameClient.moves.fight(target.id);
-      // }
 
-      this.clientState.markedUnitIds.add(this.clientState.selectedUnit.id);
-      this.clientState.selectedUnit = null;
+      if (isActionSuccessful) {
+         this.clientState.markedUnitIds.add(this.clientState.selectedUnit.id);
+         this.clientState.selectedUnit = null;
+      }
    }
 
    resolveSelection(currentPlayerId: string, object: BaseUnit | null) {
@@ -73,5 +75,23 @@ export default class ClickHandler {
       }
 
       this.clientState.selectedUnit = object;
+   }
+
+   handleFighting(target: BaseUnit) {
+      const selectedUnit = this.clientState.selectedUnit;
+      if (selectedUnit === null) {
+         alert("No unit is being selected!");
+         return false;
+      }
+
+      if (selectedUnit.playerID === target.playerID) {
+         // Validation may be removed in the future
+         alert("You cannot attack your own unit!");
+         return false;
+      }
+
+      this.gameClient.moves.fight(selectedUnit.id, target.id);
+
+      return true;
    }
 }
