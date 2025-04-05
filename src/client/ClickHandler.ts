@@ -1,8 +1,8 @@
 import { _ClientImpl } from "boardgame.io/dist/types/src/client/client";
 import MapTile from "../model/MapTile";
-import { Grid } from "honeycomb-grid";
+import { Grid, PartialCubeCoordinates } from "honeycomb-grid";
 import { GameState } from "../types/GameState";
-import { getObjectFromStateAndCoord } from "../util/board";
+import { getUnitsFromStateAndCoord } from "../util/board";
 import { ClientState } from "../types/ClientState";
 import { BaseUnit } from "../types/model/BaseUnit";
 
@@ -39,19 +39,18 @@ export default class ClickHandler {
       if (state == null) return;
 
       const coordinate = { q: tile.q, r: tile.r };
-      const target = getObjectFromStateAndCoord(state.G, coordinate);
+      const unitsOnCoord = getUnitsFromStateAndCoord(state.G, coordinate);
 
       if (this.clientState.selectedUnit == null) {
-         this.resolveSelection(state.ctx.currentPlayer, target);
+         this.resolveSelection(state.ctx.currentPlayer, unitsOnCoord);
          return;
       }
 
+      const target = unitsOnCoord.filter((unit) => unit.isAlive).shift();
+
       let isActionSuccessful = true;
-      if (target == null) {
-         const res = this.gameClient.moves.moveUnit(
-            this.clientState.selectedUnit.id,
-            coordinate
-         );
+      if (target == null || !target.isAlive) {
+         isActionSuccessful = this.handleMovement(coordinate);
       } else {
          isActionSuccessful = this.handleFighting(target);
       }
@@ -62,19 +61,35 @@ export default class ClickHandler {
       }
    }
 
-   resolveSelection(currentPlayerId: string, object: BaseUnit | null) {
-      if (object == null) return;
-      if (object.playerID != currentPlayerId) {
+   resolveSelection(currentPlayerId: string, unitsOnCoord: BaseUnit[]) {
+      const firstLivingUnit = unitsOnCoord
+         .filter((unit) => unit.isAlive)
+         .shift();
+
+      if (firstLivingUnit == null) return;
+      if (firstLivingUnit.playerID != currentPlayerId) {
          alert("Please select your own unit!");
          return;
       }
 
-      if (this.clientState.markedUnitIds.has(object.id)) {
+      if (this.clientState.markedUnitIds.has(firstLivingUnit.id)) {
          alert("This unit has done an action, choose another unit!");
          return;
       }
 
-      this.clientState.selectedUnit = object;
+      this.clientState.selectedUnit = firstLivingUnit;
+   }
+
+   handleMovement(coordinate: PartialCubeCoordinates) {
+      const selectedUnit = this.clientState.selectedUnit;
+      if (selectedUnit === null) {
+         alert("No unit is being selected!");
+         return false;
+      }
+
+      this.gameClient.moves.moveUnit(selectedUnit.id, coordinate);
+
+      return true;
    }
 
    handleFighting(target: BaseUnit) {
