@@ -136,13 +136,13 @@ class BattleSimulatorClient {
          this.units.set(unitID, newUnit);
       }
 
-      // if (state.ctx.gameover) {
-      //    const textGameOverElement = document.querySelector("#game-over-text")!;
-      //    textGameOverElement.textContent =
-      //       state.ctx.gameover.winner !== undefined
-      //          ? `Player ${state.ctx.gameover.winner} Win!`
-      //          : "It's a Draw!";
-      // }
+      if (state.ctx.gameover) {
+         const textGameOverElement = document.querySelector("#game-over-text")!;
+         textGameOverElement.textContent =
+            state.ctx.gameover.winner !== undefined
+               ? `Player ${state.ctx.gameover.winner} Win!`
+               : "It's a Draw!";
+      }
    }
 }
 
