@@ -6,4 +6,5 @@ export default {
       origin: "topLeft",
       orientation: Orientation.FLAT,
    },
+   fps: 30,
 } as const;
