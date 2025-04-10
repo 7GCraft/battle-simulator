@@ -9,19 +9,27 @@ class Renderer {
       this.pixiApp = app;
       this.events = [];
 
-      let elapsed = 0.0;
-      this.pixiApp.ticker.add((delta) => {
-         const now = new Date().getTime();
-         const diff = now - elapsed;
-         const tickLimit = 1000 / gameConfig.fps;
-         if (diff < tickLimit) return;
+      let lastTick = performance.now();
 
-         elapsed = now;
+      this.pixiApp.ticker.add((delta: number) => {
+         const now = performance.now();
+         const tickLimit = 1000 / gameConfig.fps;
+
+         if (now - lastTick >= tickLimit) {
+            this.processEvents(delta);
+
+            lastTick = now;
+         }
       });
    }
 
-   processEvents() {
-      // TODO
+   processEvents(delta: number) {
+      for (const event of this.events) {
+         // TODO: process event
+         // Maybe make event types?
+      }
+
+      this.events = [];
    }
 
    addEvent(event: any) {
