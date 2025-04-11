@@ -29,6 +29,8 @@ class Renderer {
          // Maybe make event types?
       }
 
+      console.log("Process events called!")
+
       this.events = [];
    }
 
@@ -36,3 +38,5 @@ class Renderer {
       this.events.push(event);
    }
 }
+
+export default Renderer;

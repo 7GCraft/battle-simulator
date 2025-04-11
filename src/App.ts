@@ -15,6 +15,7 @@ import { ClientState } from "./types/ClientState";
 import UnitBuilder from "./model/builder/unit-builder";
 import EndTurnHandler from "./client/EndTurnHandler";
 import { getUnitFromId } from "./util/game-state";
+import Renderer from "./Renderer"
 
 class BattleSimulatorClient {
    client: _ClientImpl<GameState>;
@@ -22,11 +23,13 @@ class BattleSimulatorClient {
    grid: Grid<MapTile>;
    units: Map<string, Unit>;
    clientState: ClientState;
+   renderer: Renderer;
 
    constructor(pixiApp: PIXI.Application) {
       this.client = Client({ game: BattleSimulator });
       this.client.start();
       this.pixiApp = pixiApp;
+      this.renderer = new Renderer(pixiApp);
       this.grid = this.createBoard();
       this.units = this.createUnits();
       const clientState = {
