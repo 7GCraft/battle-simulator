@@ -15,6 +15,7 @@ export default abstract class Entity<T> implements RenderEventHandler {
       this.graphic = new Graphics();
       this.state = state;
       this.eventHandlers = {};
+      this.addSubscribers();
    }
 
    reset() {
