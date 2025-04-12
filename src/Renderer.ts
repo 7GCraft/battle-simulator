@@ -1,8 +1,9 @@
 import gameConfig from "../gameConfig";
 import type { Application } from "pixi.js";
+import { Event, RenderEventParamMap } from "./types/model/base/event";
 
 class Renderer {
-   events: any[];
+   events: Event<keyof RenderEventParamMap>[];
    pixiApp: Application;
 
    constructor(app: Application) {
@@ -29,12 +30,12 @@ class Renderer {
          // Maybe make event types?
       }
 
-      console.log("Process events called!")
+      console.log("Process events called!");
 
       this.events = [];
    }
 
-   addEvent(event: any) {
+   addEvent(event: Event<keyof RenderEventParamMap>) {
       this.events.push(event);
    }
 }
