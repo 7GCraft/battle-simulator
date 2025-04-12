@@ -1,26 +1,48 @@
 import { Client } from "boardgame.io/client";
-import { BattleSimulator, GameState } from "./Game";
+import { BattleSimulator } from "./Game";
 import {
-   ClientState,
+   ClientState as ServerState,
    _ClientImpl,
 } from "boardgame.io/dist/types/src/client/client";
 import MapTile from "./model/MapTile";
 import { Grid } from "honeycomb-grid";
 import * as PIXI from "pixi.js";
-import Player from "./model/Player";
+import Unit from "./model/Unit";
+import { GameState } from "./types/GameState";
+import ClickHandler from "./client/ClickHandler";
+import DebugPanel from "./client/DebugPanel";
+import { ClientState } from "./types/ClientState";
+import UnitBuilder from "./model/builder/unit-builder";
+import EndTurnHandler from "./client/EndTurnHandler";
+import { getUnitFromId } from "./util/game-state";
+import Renderer from "./Renderer";
 
 class BattleSimulatorClient {
    client: _ClientImpl<GameState>;
    pixiApp: PIXI.Application;
    grid: Grid<MapTile>;
-   player: Player;
+   units: Map<string, Unit>;
+   clientState: ClientState;
+   renderer: Renderer;
 
    constructor(pixiApp: PIXI.Application) {
       this.client = Client({ game: BattleSimulator });
       this.client.start();
       this.pixiApp = pixiApp;
+      this.renderer = new Renderer(pixiApp);
       this.grid = this.createBoard();
-      this.player = this.createPlayer();
+      this.units = this.createUnits();
+      const clientState = {
+         selectedUnit: null,
+         markedUnitIds: new Set<string>(),
+      };
+
+      // FOR DEV & DEBUG
+      const debugPanel = new DebugPanel("#debug-panel");
+      this.clientState = debugPanel.watch(clientState);
+
+      // FOR PRODUCTION
+      // this.clientState = clientState;
 
       this.attachListeners();
       this.client.subscribe((state) => this.update(state));
@@ -39,56 +61,100 @@ class BattleSimulatorClient {
       return grid;
    }
 
-   createPlayer() {
+   createUnits() {
       const initialState = this.client.getInitialState();
-      const playerPos = initialState.G.player.position;
+      const gameUnits = initialState.G.units;
+      const units = new Map<string, Unit>();
 
-      // const player = new Player(playerPos, "blue");
-      const player = Player.create(0, this.grid.getHex(playerPos)!, "blue");
-      pixiApp.stage.addChild(player.render());
-      return player;
+      gameUnits.forEach((unit) => {
+         const unitTile = Unit.create(
+            unit.id,
+            0,
+            this.grid.getHex(unit.position)!,
+            unit.playerID == "0" ? "blue" : "red"
+         );
+         pixiApp.stage.addChild(UnitBuilder.renderPrimary(unitTile));
+         units.set(unit.id, unitTile);
+      });
+
+      return units;
    }
 
    attachListeners() {
-      document.addEventListener("click", ({ offsetX, offsetY }) => {
-         const tile = this.grid.pointToHex(
-            { x: offsetX, y: offsetY },
-            { allowOutside: false }
-         );
+      const clickHandler = new ClickHandler(
+         this.client,
+         this.grid,
+         this.clientState
+      );
 
-         if (tile !== undefined) {
-            this.client.moves.movePlayer({ q: tile.q, r: tile.r });
-         }
-      });
+      this.pixiApp.canvas.addEventListener("click", ({ offsetX, offsetY }) =>
+         clickHandler.handle(offsetX, offsetY)
+      );
+
+      const endTurnHandler = new EndTurnHandler(this.client, this.clientState);
+
+      document
+         .querySelector("#end-turn-button")
+         ?.addEventListener("click", () => {
+            const confirm = window.confirm(
+               "Are you sure you want to end the turn?"
+            );
+
+            if (confirm) endTurnHandler.handle();
+         });
    }
 
-   update(state: ClientState<GameState>) {
+   update(state: ServerState<GameState>) {
       if (state === null) return;
-      this.player.destroy();
+      const renderedUnitIDs = this.units.keys();
 
-      const newPlayerPosition = state.G.player.position;
-      const tile = this.grid.getHex(newPlayerPosition)!;
-      const player = Player.create(state.G.player.power, tile, "blue");
-      pixiApp.stage.addChild(player.render());
-      this.player = player;
+      for (const unitID of renderedUnitIDs) {
+         const unit = this.units.get(unitID)!;
+         unit.destroy();
 
-      tile.cellNumber = 0;
-      tile.render();
-      // console.log("Before: ", { q: this.player.q, r: this.player.r });
-      // console.log("After: ", newPlayerPosition);
-      // const cubePosition = toCube(TileHex.settings, newPlayerPosition);
-      // const tilePosition = this.grid.getHex(newPlayerPosition);
-      // this.player = this.player.translate({
-      //    q: cubePosition.q - this.player.q,
-      //    r: cubePosition.r - this.player.r,
-      // });
+         const unitState = getUnitFromId(state.G.units, unitID);
+         if (unitState == null || !unitState.isAlive) {
+            this.units.delete(unitID);
+            continue;
+         }
+
+         const newUnitPosition = unitState.position;
+         const tile = this.grid.getHex(newUnitPosition)!;
+         const newUnit = Unit.create(
+            unitState.id,
+            unitState.power,
+            tile,
+            unitState.playerID == "0" ? "blue" : "red"
+         );
+
+         if (this.clientState.markedUnitIds.has(unitState.id)) {
+            pixiApp.stage.addChild(UnitBuilder.renderPrimary(newUnit));
+         } else {
+            pixiApp.stage.addChild(UnitBuilder.renderDisabled(newUnit));
+         }
+
+         tile.cellNumber = 0;
+         tile.render();
+
+         this.units.set(unitID, newUnit);
+      }
+
+      if (state.ctx.gameover) {
+         const textGameOverElement = document.querySelector("#game-over-text")!;
+         textGameOverElement.textContent =
+            state.ctx.gameover.winner !== undefined
+               ? `Player ${state.ctx.gameover.winner} Win!`
+               : "It's a Draw!";
+      }
    }
 }
 
 const pixiApp = new PIXI.Application();
 await pixiApp.init({ backgroundAlpha: 0 });
 
-document.body.appendChild(pixiApp.canvas);
+document
+   .querySelector("#game")!
+   .insertBefore(pixiApp.canvas, document.querySelector("#end-turn-button"));
 
 // Debug Only
 globalThis.__PIXI_APP__ = pixiApp;
