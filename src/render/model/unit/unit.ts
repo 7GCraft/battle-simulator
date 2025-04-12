@@ -42,6 +42,7 @@ export default class Unit extends Entity<BaseUnit> {
       text.x = this.hex.x - text.width / 2;
       text.y = this.hex.y - text.height / 2;
       this.graphic.addChild(text);
+      return this;
    }
 
    addSubscribers() {
