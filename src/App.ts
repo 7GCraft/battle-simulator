@@ -11,11 +11,14 @@ import DebugPanel from "./client/DebugPanel";
 import { ClientState } from "./types/ClientState";
 import Renderer from "./Renderer";
 import MapGenerator from "./render/map-generator";
+import Unit from "./render/model/unit/unit";
+import UnitGenerator from "./render/unit-generator";
 
 class BattleSimulatorClient {
    client: _ClientImpl<GameState>;
    pixiApp: PIXI.Application;
    grid: Grid<Hex>;
+   units: Map<string, Unit>;
    clientState: ClientState;
    renderer: Renderer;
 
@@ -32,6 +35,12 @@ class BattleSimulatorClient {
          pixiApp
       ).generate();
       this.grid = grid;
+
+      this.units = new UnitGenerator(
+         initialStates.G.units,
+         initialStates.ctx.currentPlayer,
+         pixiApp
+      ).generate();
 
       const clientState = {
          selectedUnit: null,
