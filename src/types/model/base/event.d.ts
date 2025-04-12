@@ -7,7 +7,11 @@ export interface EntityEventParamMap {
    die: void;
 }
 
-export interface RenderEventParamMap extends EntityEventParamMap {}
+export interface MapTileEventParamMap {}
+
+export interface RenderEventParamMap
+   extends EntityEventParamMap,
+      MapTileEventParamMap {}
 
 // export interface RenderEvent<K extends keyof RenderEventParamMap> {
 //    object_id: string;
@@ -19,10 +23,10 @@ export interface RenderEventParamMap extends EntityEventParamMap {}
 //    [event: E]: (parameter: RenderEventParamMap[E]) => void;
 // }
 
-// type Test = Record<string, string>;
-
 export interface RenderEventHandler {
    eventHandlers: Record<string, (...args: any[]) => void>; // Nuclear option
+
+   // NONE OF THIS SHIT WORKS
    // eventHandlers: {
    //    [E in RenderEventParamMap]: (parameter: RenderEventParamMap[E]) => void;
    // };
@@ -35,15 +39,7 @@ export interface RenderEventHandler {
    //    keyof RenderEventParamMap,
    //    (parameter: RenderEventParamMap[keyof RenderEventParamMap]) => void
    // >;
-   // consume<E extends keyof RenderEventParamMap>(
-   //    event: E,
-   //    parameter: RenderEventParamMap[E]
-   // ): void;
-   // process<E extends keyof RenderEventParamMap>(
-   //    event: E,
-   //    parameter: EntityEventParamMap[E],
-   //    handler: (event: E, parameter: RenderEventParamMap[E]) => void
-   // ): void;
+
    addSubscribers(): void;
    addSubscriber<E extends keyof EntityEventParamMap>(
       event: E,
