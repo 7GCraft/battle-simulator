@@ -1,13 +1,14 @@
 import { PartialCubeCoordinates } from "honeycomb-grid";
-import { GameState } from "../types/GameState";
+import Unit from "../render/model/unit/unit";
 
-export const getUnitsFromStateAndCoord = (
-   state: GameState,
+export const getUnitsFromClientUnitsAndCoord = (
+   units: Unit[],
    coordinate: PartialCubeCoordinates
 ) => {
-   const filtered = state.units.filter(
+   const filtered = units.filter(
       (unit) =>
-         unit.position.q === coordinate.q && unit.position.r === coordinate.r
+         unit.state.position.q === coordinate.q &&
+         unit.state.position.r === coordinate.r
    );
 
    return filtered;

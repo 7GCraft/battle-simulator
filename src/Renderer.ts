@@ -1,14 +1,17 @@
 import gameConfig from "../gameConfig";
 import type { Application } from "pixi.js";
 import { Event, RenderEventParamMap } from "./types/model/base/event";
+import Unit from "./render/model/unit/unit";
 
 class Renderer {
    events: Event<keyof RenderEventParamMap>[];
    pixiApp: Application;
+   units: Map<string, Unit>;
 
-   constructor(app: Application) {
+   constructor(app: Application, units: Map<string, Unit>) {
       this.pixiApp = app;
       this.events = [];
+      this.units = units;
 
       let lastTick = performance.now();
 
@@ -26,17 +29,20 @@ class Renderer {
 
    processEvents(delta: number) {
       for (const event of this.events) {
-         // TODO: process event
-         // Maybe make event types?
+         const unit = this.units.get(event.object_id);
+         if (unit === undefined) continue;
+         unit.consume(event.event, event.parameter);
       }
-
-      console.log("Process events called!");
 
       this.events = [];
    }
 
-   addEvent(event: Event<keyof RenderEventParamMap>) {
-      this.events.push(event);
+   addEvent<E extends keyof RenderEventParamMap>(
+      object_id: string,
+      event: E,
+      parameter: RenderEventParamMap[E]
+   ) {
+      this.events.push({ object_id, event, parameter });
    }
 }
 

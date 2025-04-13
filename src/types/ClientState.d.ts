@@ -1,7 +1,7 @@
-import Unit from "../model/Unit";
-import { BaseUnit } from "./model/BaseUnit";
+import Unit from "../render/model/unit/unit";
 
 export declare type ClientState = {
-   selectedUnit: BaseUnit | null;
+   units: Map<string, Unit>;
+   selectedUnit: Unit | null;
    markedUnitIds: Set<string>; // Need better name
 };

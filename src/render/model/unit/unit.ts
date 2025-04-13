@@ -46,6 +46,9 @@ export default class Unit extends Entity<BaseUnit> {
    }
 
    addSubscribers() {
-      // this.addSubscriber("selected", (param) => {});
+      this.addSubscriber("selected", (isSelected) => {
+         if (isSelected) this.reset().drawBase().fill("primary").displayPower();
+         else this.reset().drawBase().fill("active").displayPower();
+      });
    }
 }

@@ -2,9 +2,11 @@ import { ClientState } from "../types/ClientState";
 
 export default class DebugPanel {
    debugPanelElement: Element;
+   excludeLists: Set<string | symbol>;
 
-   constructor(panelSelector: string) {
+   constructor(panelSelector: string, excludeLists: Set<string | symbol>) {
       this.debugPanelElement = document.querySelector(panelSelector)!;
+      this.excludeLists = excludeLists;
    }
 
    watch(clientState: ClientState) {
@@ -23,7 +25,10 @@ export default class DebugPanel {
       let html = "";
       for (const prop in state) {
          const val = state[prop as keyof ClientState];
-         html += `${prop}: ${this.getStringContentFrom(val)} <br>`;
+         const content = this.excludeLists.has(prop)
+            ? "NOT SHOWN"
+            : this.getStringContentFrom(val);
+         html += `${prop}: ${content} <br>`;
       }
       return html;
    }

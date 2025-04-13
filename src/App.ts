@@ -13,12 +13,12 @@ import Renderer from "./Renderer";
 import MapGenerator from "./render/map-generator";
 import Unit from "./render/model/unit/unit";
 import UnitGenerator from "./render/unit-generator";
+import ClickHandler from "./client/ClickHandler";
 
 class BattleSimulatorClient {
    client: _ClientImpl<GameState>;
    pixiApp: PIXI.Application;
    grid: Grid<Hex>;
-   units: Map<string, Unit>;
    clientState: ClientState;
    renderer: Renderer;
 
@@ -27,32 +27,50 @@ class BattleSimulatorClient {
       this.client.start();
       const initialStates = this.client.getInitialState();
 
-      this.pixiApp = pixiApp;
-      this.renderer = new Renderer(pixiApp);
-
-      const [grid, tiles] = new MapGenerator(
+      const [grid, _] = new MapGenerator(
          initialStates.G.cells,
          pixiApp
       ).generate();
       this.grid = grid;
 
-      this.units = new UnitGenerator(
+      const units = new UnitGenerator(
          initialStates.G.units,
          initialStates.ctx.currentPlayer,
          pixiApp
       ).generate();
 
+      this.pixiApp = pixiApp;
+      this.renderer = new Renderer(pixiApp, units);
+
       const clientState = {
+         units: units,
          selectedUnit: null,
          markedUnitIds: new Set<string>(),
       };
 
       // FOR DEV & DEBUG
-      const debugPanel = new DebugPanel("#debug-panel");
-      this.clientState = debugPanel.watch(clientState);
+      // BUGGED BECAUSE ERROR WHEN DEALING WITH CIRCULAR REFERENCES
+      // const excludeLists = new Set(["units"]);
+      // const debugPanel = new DebugPanel("#debug-panel", excludeLists);
+      // this.clientState = debugPanel.watch(clientState);
 
       // FOR PRODUCTION
-      // this.clientState = clientState;
+      this.clientState = clientState;
+
+      this.attachListeners();
+   }
+
+   attachListeners() {
+      const clickHandler = new ClickHandler(
+         this.client,
+         this.grid,
+         this.clientState,
+         this.renderer
+      );
+
+      this.pixiApp.canvas.addEventListener("click", ({ offsetX, offsetY }) =>
+         clickHandler.handle(offsetX, offsetY)
+      );
    }
 }
 
