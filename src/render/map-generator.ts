@@ -1,14 +1,14 @@
 import { Grid } from "honeycomb-grid";
-import { BaseMapTile } from "../types/model/BaseMapTile";
+import { MapTileState } from "../types/model/map-tile-state";
 import { Application } from "pixi.js";
 import Tile from "./model/map/tile";
 import MapTileHex from "./model/base/map-tile-hex";
 
 export default class MapGenerator {
-   tileStates: BaseMapTile[];
+   tileStates: MapTileState[];
    pixiApp: Application;
 
-   constructor(tileStates: BaseMapTile[], pixiApp: Application) {
+   constructor(tileStates: MapTileState[], pixiApp: Application) {
       this.tileStates = tileStates;
       this.pixiApp = pixiApp;
    }

@@ -3,7 +3,7 @@ import { Grid, Hex, PartialCubeCoordinates } from "honeycomb-grid";
 import { GameState } from "../types/GameState";
 import { getUnitsFromClientUnitsAndCoord } from "../util/board";
 import { ClientState } from "../types/ClientState";
-import { BaseUnit } from "../types/model/BaseUnit";
+import { UnitState } from "../types/model/unit-state";
 import Renderer from "../Renderer";
 import Unit from "../render/model/unit/unit";
 
@@ -70,24 +70,25 @@ export default class ClickHandler {
          return;
       }
 
-      // const target = unitsOnCoord.filter((unit) => unit.isAlive).shift();
+      const target = unitsOnCoord.filter((unit) => unit.state.isAlive).shift();
 
-      let isActionSuccessful = false;
-      // if (target == null || !target.isAlive) {
-      //    isActionSuccessful = this.handleMovement(coordinate);
-      // } else {
+      // let isActionSuccessful = false;
+      if (target == null || !target.state.isAlive) {
+         this.handleMovement(coordinate);
+      }
+      // else {
       //    isActionSuccessful = this.handleFighting(target);
       // }
 
-      if (isActionSuccessful) {
-         this.clientState.markedUnitIds.add(this.clientState.selectedUnit.id);
-         this.renderer.addEvent(
-            this.clientState.selectedUnit!.id,
-            "selected",
-            false
-         );
-         this.clientState.selectedUnit = null;
-      }
+      // if (isActionSuccessful) {
+      //    this.clientState.markedUnitIds.add(this.clientState.selectedUnit.id);
+      //    this.renderer.addEvent(
+      //       this.clientState.selectedUnit!.id,
+      //       "selected",
+      //       false
+      //    );
+      //    this.clientState.selectedUnit = null;
+      // }
    }
 
    resolveSelection(currentPlayerId: string, unitsOnCoord: Unit[]) {
@@ -110,19 +111,19 @@ export default class ClickHandler {
       return true;
    }
 
-   // handleMovement(coordinate: PartialCubeCoordinates) {
-   //    const selectedUnit = this.clientState.selectedUnit;
-   //    if (selectedUnit === null) {
-   //       alert("No unit is being selected!");
-   //       return false;
-   //    }
+   handleMovement(coordinate: PartialCubeCoordinates) {
+      const selectedUnit = this.clientState.selectedUnit;
+      if (selectedUnit === null) {
+         alert("No unit is being selected!");
+         return false;
+      }
 
-   //    this.gameClient.moves.moveUnit(selectedUnit.id, coordinate);
+      this.gameClient.moves.moveUnit(selectedUnit.state.id, coordinate);
 
-   //    return true;
-   // }
+      return true;
+   }
 
-   // handleFighting(target: BaseUnit) {
+   // handleFighting(target: UnitState) {
    //    const selectedUnit = this.clientState.selectedUnit;
    //    if (selectedUnit === null) {
    //       alert("No unit is being selected!");

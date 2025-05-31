@@ -2,7 +2,7 @@ import { Graphics } from "pixi.js";
 import {
    EntityEventParamMap,
    RenderEventHandler,
-} from "../../types/model/base/event";
+} from "../../types/model/base/render-event";
 
 export default abstract class Entity<T> implements RenderEventHandler {
    id: string;

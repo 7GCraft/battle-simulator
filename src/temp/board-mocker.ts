@@ -1,7 +1,7 @@
 import { toCube } from "honeycomb-grid";
 import TileHex from "../model/Base/TileHex";
-import { BaseMapTile } from "../types/model/BaseMapTile";
-import { BaseUnit } from "../types/model/BaseUnit";
+import { MapTileState } from "../types/model/map-tile-state";
+import { UnitState } from "../types/model/unit-state";
 
 function getRandomInt(min: number, max: number) {
    const minCeiled = Math.ceil(min);
@@ -9,7 +9,7 @@ function getRandomInt(min: number, max: number) {
    return Math.floor(Math.random() * (maxFloored - minCeiled) + minCeiled);
 }
 
-export const mockBoard = (): BaseMapTile[] => {
+export const mockBoard = (): MapTileState[] => {
    return Array.from(Array(10), (_, i) =>
       Array.from(Array(10), (_, j) => ({
          coordinates: toCube(TileHex.settings, { row: i, col: j }),
@@ -19,12 +19,12 @@ export const mockBoard = (): BaseMapTile[] => {
 };
 
 export const mockUnits = (
-   board: BaseMapTile[],
+   board: MapTileState[],
    playerCount: number,
    unitPerPlayerCount: number
-): BaseUnit[] => {
+): UnitState[] => {
    const availablePositions = board.filter((tile) => tile.cellNumber === 0);
-   const mockUnits: BaseUnit[] = [];
+   const mockUnits: UnitState[] = [];
 
    for (let i = 0; i < playerCount * unitPerPlayerCount; i++) {
       const randomTileIdx = getRandomInt(0, availablePositions.length);

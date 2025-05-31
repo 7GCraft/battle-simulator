@@ -1,19 +1,16 @@
 import { Client } from "boardgame.io/client";
 import { BattleSimulator } from "./Game";
-import {
-   ClientState as ServerState,
-   _ClientImpl,
-} from "boardgame.io/dist/types/src/client/client";
+import { _ClientImpl } from "boardgame.io/dist/types/src/client/client";
 import { Grid, Hex } from "honeycomb-grid";
 import * as PIXI from "pixi.js";
 import { GameState } from "./types/GameState";
 import DebugPanel from "./client/DebugPanel";
-import { ClientState } from "./types/ClientState";
+import { ClientState, ServerState } from "./types/ClientState";
 import Renderer from "./Renderer";
 import MapGenerator from "./render/map-generator";
-import Unit from "./render/model/unit/unit";
 import UnitGenerator from "./render/unit-generator";
 import ClickHandler from "./client/ClickHandler";
+import { UnitGameEvent } from "./types/model/base/game-event";
 
 class BattleSimulatorClient {
    client: _ClientImpl<GameState>;
@@ -33,7 +30,7 @@ class BattleSimulatorClient {
       ).generate();
       this.grid = grid;
 
-      const units = new UnitGenerator(
+      const [units, unitIdToClientUnitId] = new UnitGenerator(
          initialStates.G.units,
          initialStates.ctx.currentPlayer,
          pixiApp
@@ -42,8 +39,9 @@ class BattleSimulatorClient {
       this.pixiApp = pixiApp;
       this.renderer = new Renderer(pixiApp, units);
 
-      const clientState = {
+      const clientState: ClientState = {
          units: units,
+         unitIdToClientUnitId: unitIdToClientUnitId,
          selectedUnit: null,
          markedUnitIds: new Set<string>(),
       };
@@ -58,6 +56,7 @@ class BattleSimulatorClient {
       this.clientState = clientState;
 
       this.attachListeners();
+      this.client.subscribe((state) => this.update(state));
    }
 
    attachListeners() {
@@ -71,6 +70,46 @@ class BattleSimulatorClient {
       this.pixiApp.canvas.addEventListener("click", ({ offsetX, offsetY }) =>
          clickHandler.handle(offsetX, offsetY)
       );
+   }
+
+   update(state: ServerState<GameState>) {
+      // When an invalid move happens, it sends update 2 times to the client
+      // This logic is used because the first update will contain "transients" property
+      if (state === null || state.hasOwnProperty("transients")) return;
+
+      console.log(state.plugins.gameEvent);
+
+      const gameEventState = state.plugins.gameEvent;
+      const lastErrorMessage =
+         gameEventState.api?.lastErrorMessage ||
+         gameEventState.data.lastErrorMessage;
+
+      if (lastErrorMessage !== null) {
+         alert(lastErrorMessage);
+         return;
+      }
+
+      if (gameEventState.data.eventQueue.length === 0) return;
+
+      for (const pushedEvent of gameEventState.data.eventQueue) {
+         const serverUnit = state.G.units.filter(
+            (unitState) => unitState.id === pushedEvent.unit_id
+         )[0]!;
+         const clientUnitId = this.clientState.unitIdToClientUnitId.get(
+            pushedEvent.unit_id
+         )!;
+         const clientUnit = this.clientState.units.get(clientUnitId)!;
+
+         if (pushedEvent.event === UnitGameEvent.Move) {
+            clientUnit.state.position = serverUnit.position;
+            this.renderer.addEvent(clientUnitId, "move", serverUnit.position);
+         }
+      }
+
+      const selectedUnit = this.clientState.selectedUnit!;
+      this.renderer.addEvent(selectedUnit.id, "selected", false);
+      this.clientState.markedUnitIds.add(selectedUnit.id);
+      this.clientState.selectedUnit = null;
    }
 }
 

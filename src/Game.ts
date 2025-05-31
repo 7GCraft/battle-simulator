@@ -3,6 +3,7 @@ import { mockBoard, mockUnits } from "./temp/board-mocker";
 import { GameState } from "./types/GameState";
 import MoveController from "./controller/move-controller";
 import FightController from "./controller/fight-controller";
+import GameEventPlugin from "./plugins/game-event-plugin";
 
 export const BattleSimulator: Game<GameState> = {
    setup: () => {
@@ -19,6 +20,7 @@ export const BattleSimulator: Game<GameState> = {
    },
    minPlayers: 2,
    maxPlayers: 2,
+   plugins: [GameEventPlugin()],
    turn: {
       // minMoves: 1,
       // maxMoves: 1,

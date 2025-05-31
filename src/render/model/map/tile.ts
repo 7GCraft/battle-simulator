@@ -5,7 +5,7 @@ import { Graphics, Text } from "pixi.js";
 import {
    EntityEventParamMap,
    RenderEventHandler,
-} from "../../../types/model/base/event";
+} from "../../../types/model/base/render-event";
 
 export default class Tile implements RenderEventHandler {
    hex: Hex;

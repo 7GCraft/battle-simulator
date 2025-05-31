@@ -1,10 +1,13 @@
 import gameConfig from "../gameConfig";
 import type { Application } from "pixi.js";
-import { Event, RenderEventParamMap } from "./types/model/base/event";
+import {
+   RenderEvent,
+   RenderEventParamMap,
+} from "./types/model/base/render-event";
 import Unit from "./render/model/unit/unit";
 
 class Renderer {
-   events: Event<keyof RenderEventParamMap>[];
+   events: RenderEvent<keyof RenderEventParamMap>[];
    pixiApp: Application;
    units: Map<string, Unit>;
 
