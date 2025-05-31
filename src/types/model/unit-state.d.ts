@@ -1,6 +1,6 @@
 import { PartialCubeCoordinates } from "honeycomb-grid";
 
-export declare type BaseUnit = {
+export declare type UnitState = {
    id: string;
    playerID: string;
    position: PartialCubeCoordinates;

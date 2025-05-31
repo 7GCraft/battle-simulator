@@ -51,7 +51,7 @@ export interface RenderEventHandler {
    );
 }
 
-export interface Event<E extends keyof RenderEventParamMap> {
+export interface RenderEvent<E extends keyof RenderEventParamMap> {
    object_id: string;
    event: E;
    parameter: RenderEventParamMap[E];
